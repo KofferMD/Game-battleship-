@@ -1,40 +1,3 @@
-// var randomLoc = Math.floor(Math.random() * 5);
-// var location1 = randomLoc;
-// var location2 = location1 + 1;
-// var location3 = location2 + 1;
-
-// var guess;
-// var hits = 0;
-// var guesses = 0;
-// var isSunk = false;
-
-// while (isSunk != true) {
-//     guess = prompt("Ready, aim, fire! (enter a number 0-6):");
-
-//     if (guess < 0 || guess > 6) {
-//         alert("Please enter a valid cell number!");
-//     } else {
-//         guesses = guesses + 1;
-//     }
-
-//     if (guess == location1 || guess == location2 || guess == location3) {
-//         hits = hits + 1;
-//         alert("HIT!");
-
-//         if (hits == 3) {
-//             isSunk = true;
-//             alert("You sank my battleship!");
-//         }
-
-//     } else {
-//         alert("MISS!");
-//     }
-
-
-// }
-// var stats = "You took " + guesses + " guesses to sink the battleship, " + "which means your shooting accuracy was " + (3 / guesses);
-// alert(stats);
-
 var view = {
     // Задает свойству innerHTML сообщение переданное методу
     displayMessage: function (msg) {
@@ -57,10 +20,96 @@ var view = {
     }
 };
 
-view.displayMessage("BOOM BOOM, motherf*cker!")
-view.displayMiss("00");
-view.displayHit("34");
-view.displayMiss("55");
-view.displayHit("12");
-view.displayMiss("25");
-view.displayHit("26");
+
+var model = {
+    boardSize: 7, //Длинна игрового поля
+    numShips: 3, //Кол-во кораблей
+    shipLength: 3, // Длинна корабля
+    shipSunk: 0, // Кол-во потопленных кораблей
+    //ships соддержит массив объектов ship, 
+    ships: [{
+            locations: ["06", "16", "26"],
+            hits: ["", "", ""]
+        },
+        {
+            locations: ["24", "34", "44"],
+            hits: ["", "", ""]
+        },
+        {
+            locations: ["10", "11", "12"],
+            hits: ["", "", ""]
+        }
+    ],
+    //guess - координаты выстрела
+    fire: function (guess) {
+        //перебирает массив ships
+        for (var i = 0; i < this.numShips; i++) {
+            //Получаем объект ship
+            var ship = this.ships[i];
+            //Массив locations из объекта ship
+            // locations = ship.locations;
+            //Затем индекс клетки в locations
+            // var index = locations.indexOf(guess);
+            //СЦЕПЛЕНИЕ
+            var index = ship.locations.indexOf(guess);
+
+            if (index >= 0) {
+                ship.hits[index] = "hit";
+                //Оповещение о том, что в клетке guess следует вывести маркуер попадания
+                view.displayHit(guess);
+                //Выводим сообщение
+                view.displayMessage("HIT!");
+                if (this.isSunk(ship)) {
+                    view.displayMessage("You sank my buttleship!");
+                    this.shipsSunk++;
+                }
+                return true;
+            }
+        }
+        view.displayMiss(guess);
+        view.displayMessage("You missed.");
+        return false;
+    },
+    //метод с именем isSunk получает объект корабля и возвращает true 
+    //если корабль потоплен, иначе false
+    isSunk: function (ship) {
+        for (var i = 0; i < this.shipLength; i++) {
+            if (ship.hits[i] !== 'hit') {
+                return false; //если есть хотя бы одна клетка, в которую еще не попал, то корабль еще жив
+            }
+        }
+        return true;
+    }
+
+};
+
+var controller = {
+    guesses: 0,
+
+    processGuess: function (guess) {
+        var location = parseGuess(guess);
+        //массив с буквами
+        var alphabet = ["A", "B", "C", "D", "E", "F", "G"];
+        //проверка введенных данных
+        if (guess === null || guess.length !== 2) {
+            alert("Enter a letter and a number on the board.");
+        } else {
+            //Извлекаем первый символ из строки
+            firstChar = guess.chartAt(0);
+            //При помощи метода получаем цифру от 0 до 6
+            var row = alphabet.indexOf(firstChar);
+            //Добавляется код для второго символа
+            var column = guess.chartAt(1);
+            if (isNaN(row) || isNaN(column)) {
+                alert("Oops, that isn't on the board");
+            } else if (row < 0 || row >= model.boardSize || column < 0 || column >= model.boardSize) {
+                alert("Oops, that's off the board");
+            } else {
+                //Здесь все проверки пройдены поэтому метод может вернуть результат
+                return row + column;
+            }
+        }
+        //Если управление передано в эту точку, значит, какая-то проверка не прошла
+        return null;
+    }
+};
